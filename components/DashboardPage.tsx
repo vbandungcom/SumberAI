@@ -1,12 +1,10 @@
-
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 
 const DashboardPage: React.FC = () => {
-  const { user, role, error: authError } = useAuth(); // Get authError from context
-  const navigate = useNavigate();
+  const { user, role, error: authError } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -16,13 +14,14 @@ const DashboardPage: React.FC = () => {
       if (error) {
         throw error;
       }
-      // Successful sign out will trigger onAuthStateChange, which handles state cleanup.
-      // Navigate immediately for a faster UX.
-      navigate('/auth');
+      // On successful sign-out, the onAuthStateChange listener in AuthContext
+      // will update the user state to null. The ProtectedRoute component will then
+      // automatically handle the navigation, unmounting this page.
+      // No manual navigation is needed here.
     } catch (e: any) {
       console.error('Error during logout:', e.message);
       alert(`Logout failed: ${e.message}`);
-    } finally {
+      // If logout fails, reset the button so the user can try again.
       setIsLoggingOut(false);
     }
   };

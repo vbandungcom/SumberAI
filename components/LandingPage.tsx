@@ -101,8 +101,8 @@ const Header: React.FC = () => (
                 <a href="#kontak" className="hover:text-white">Kontak</a>
             </nav>
             <div className="flex items-center space-x-4">
-                <Link to="/auth" className="hidden sm:block border border-blue-400 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition">Masuk</Link>
-                <Link to="/auth" className="bg-white text-blue-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition">Daftar</Link>
+                <Link to="/auth" state={{ isLogin: true }} className="hidden sm:block border border-blue-400 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition">Masuk</Link>
+                <Link to="/auth" state={{ isLogin: false }} className="bg-white text-blue-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition">Daftar</Link>
             </div>
         </div>
     </header>
@@ -228,7 +228,7 @@ const LandingPage: React.FC = () => {
                     <div className="text-center bg-blue-800/50 backdrop-blur-md rounded-2xl p-12 border border-blue-700/50 max-w-4xl mx-auto">
                         <h2 className="text-4xl font-bold mb-4">Siap Memulai Perjalanan AI Anda?</h2>
                         <p className="text-blue-200 max-w-2xl mx-auto mb-8">Bergabunglah dengan ribuan mahasiswa yang telah mengoptimalkan studi mereka dengan kekuatan AI.</p>
-                        <Link to="/auth" className="bg-white text-blue-700 font-semibold py-3 px-8 rounded-lg hover:bg-gray-200 transition-transform transform hover:scale-105 inline-flex items-center space-x-2">
+                        <Link to="/auth" state={{ isLogin: false }} className="bg-white text-blue-700 font-semibold py-3 px-8 rounded-lg hover:bg-gray-200 transition-transform transform hover:scale-105 inline-flex items-center space-x-2">
                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                             <span>Mulai Gratis Sekarang</span>
                         </Link>

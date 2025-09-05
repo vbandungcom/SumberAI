@@ -1,10 +1,13 @@
 
 import React, { useState, FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 
 const AuthPage: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(false);
+  const location = useLocation();
+  // Initialize state based on navigation. Default to Login view.
+  // True for Login, False for Sign Up.
+  const [isLogin, setIsLogin] = useState(location.state?.isLogin ?? true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
