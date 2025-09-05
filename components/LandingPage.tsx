@@ -14,49 +14,56 @@ const featureData = [
         color: 'bg-pink-500',
         title: 'Dashboard',
         description: 'Pantau aktivitas belajar, progres akademik, dan notifikasi penting dalam satu tampilan terpusat',
-        links: ['Analytics', 'Notifikasi']
+        links: ['Analytics', 'Notifikasi'],
+        path: '/dashboard'
     },
     {
         icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-1-5h.01" /></svg>,
         color: 'bg-green-500',
         title: 'AI News & Insight',
         description: 'Dapatkan berita terkini dan wawasan mendalam tentang perkembangan AI dalam Bahasa Indonesia dan Inggris',
-        links: ['Global', 'AI Trends']
+        links: ['Global', 'AI Trends'],
+        path: '/news'
     },
     {
         icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>,
         color: 'bg-blue-500',
         title: 'AI Academy',
         description: 'Akses modul pembelajaran AI interaktif, video tutorial, quiz, dan chatbot pembelajaran personal',
-        links: ['Video', 'Quiz']
+        links: ['Video', 'Quiz'],
+        path: '#'
     },
     {
         icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>,
         color: 'bg-orange-500',
         title: 'AI Marketplace',
         description: 'Jual beli produk digital berbasis AI seperti prompt engineering, template, dan toolkit AI',
-        links: ['Beli', 'Jual']
+        links: ['Beli', 'Jual'],
+        path: '#'
     },
     {
         icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>,
         color: 'bg-teal-500',
         title: 'AI English Tutor',
         description: 'Chatbot pintar untuk latihan TOEFL/IELTS dengan feedback real-time dan analisis kemampuan',
-        links: ['Speaking', 'Writing']
+        links: ['Speaking', 'Writing'],
+        path: '#'
     },
     {
         icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
         color: 'bg-yellow-500',
         title: 'AI Scholar Hub',
         description: 'Pencarian beasiswa cerdas dengan notifikasi otomatis berdasarkan profil dan preferensi Anda',
-        links: ['Filter', 'Alert']
+        links: ['Filter', 'Alert'],
+        path: '#'
     },
     {
         icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.125-1.273-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.125-1.273.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
         color: 'bg-purple-500',
         title: 'Community Forum',
         description: 'Forum diskusi mahasiswa untuk berbagi pengalaman, tips, dan insight tentang AI dan teknologi',
-        links: ['Diskusi', 'Berbagi']
+        links: ['Diskusi', 'Berbagi'],
+        path: '#'
     }
 ];
 
@@ -146,25 +153,29 @@ const LandingPage: React.FC = () => {
                         {/* Decorative shape */}
                         <div className="absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-blue-500/20 rounded-2xl rotate-45 opacity-50"></div>
                         {featureData.slice(0, 6).map((feature, index) => (
-                            <div key={index} className="bg-blue-800/50 backdrop-blur-md rounded-2xl p-6 border border-blue-700/50 transition-all duration-300 hover:border-cyan-400 hover:bg-blue-800/80 transform hover:-translate-y-2">
-                                <IconContainer className={feature.color}>{feature.icon}</IconContainer>
-                                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                                <p className="text-blue-200 text-sm mb-4 h-20">{feature.description}</p>
-                                <div className="flex space-x-4 text-sm text-blue-300">
-                                    {feature.links.map(link => <span key={link}>{link}</span>)}
+                             <Link to={feature.path} key={index} className="flex">
+                                <div className="bg-blue-800/50 backdrop-blur-md rounded-2xl p-6 border border-blue-700/50 transition-all duration-300 hover:border-cyan-400 hover:bg-blue-800/80 transform hover:-translate-y-2 w-full">
+                                    <IconContainer className={feature.color}>{feature.icon}</IconContainer>
+                                    <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                                    <p className="text-blue-200 text-sm mb-4 h-20">{feature.description}</p>
+                                    <div className="flex space-x-4 text-sm text-blue-300 mt-auto">
+                                        {feature.links.map(link => <span key={link}>{link}</span>)}
+                                    </div>
                                 </div>
-                            </div>
+                             </Link>
                         ))}
                     </div>
                     <div className="mt-8 flex justify-center">
-                       <div className="bg-blue-800/50 backdrop-blur-md rounded-2xl p-6 border border-blue-700/50 transition-all duration-300 hover:border-cyan-400 hover:bg-blue-800/80 transform hover:-translate-y-2 lg:w-1/3 md:w-1/2">
-                           <IconContainer className={featureData[6].color}>{featureData[6].icon}</IconContainer>
-                           <h3 className="text-xl font-bold mb-2">{featureData[6].title}</h3>
-                           <p className="text-blue-200 text-sm mb-4">{featureData[6].description}</p>
-                           <div className="flex space-x-4 text-sm text-blue-300">
-                               {featureData[6].links.map(link => <span key={link}>{link}</span>)}
+                       <Link to={featureData[6].path} className="lg:w-1/3 md:w-1/2 w-full flex">
+                           <div className="bg-blue-800/50 backdrop-blur-md rounded-2xl p-6 border border-blue-700/50 transition-all duration-300 hover:border-cyan-400 hover:bg-blue-800/80 transform hover:-translate-y-2 w-full">
+                               <IconContainer className={featureData[6].color}>{featureData[6].icon}</IconContainer>
+                               <h3 className="text-xl font-bold mb-2">{featureData[6].title}</h3>
+                               <p className="text-blue-200 text-sm mb-4">{featureData[6].description}</p>
+                               <div className="flex space-x-4 text-sm text-blue-300 mt-auto">
+                                   {featureData[6].links.map(link => <span key={link}>{link}</span>)}
+                               </div>
                            </div>
-                       </div>
+                       </Link>
                     </div>
                 </section>
 
@@ -260,7 +271,8 @@ const LandingPage: React.FC = () => {
                         <div>
                             <h3 className="font-bold text-white mb-4">Fitur</h3>
                             <ul className="space-y-2">
-                                <li><a href="#" className="hover:text-white">Dashboard</a></li>
+                                <li><Link to="/dashboard" className="hover:text-white">Dashboard</Link></li>
+                                <li><Link to="/news" className="hover:text-white">AI News & Insight</Link></li>
                                 <li><a href="#" className="hover:text-white">AI Academy</a></li>
                                 <li><a href="#" className="hover:text-white">Marketplace</a></li>
                                 <li><a href="#" className="hover:text-white">English Tutor</a></li>
