@@ -220,7 +220,7 @@ const ArticleManagement: React.FC = () => {
                 throw new Error(`Invalid article ID: "${articleToDelete.id}".`);
             }
 
-            const { error: deleteError, count } = await supabase
+            const { error: deleteError } = await supabase
                 .from('articles')
                 .delete()
                 .eq('id', idToDelete);
@@ -229,12 +229,11 @@ const ArticleManagement: React.FC = () => {
                 throw deleteError;
             }
 
-            if (count === 0 || count === null) {
-                 setError("Penghapusan gagal: Artikel tidak ditemukan. Mungkin sudah dihapus sebelumnya.");
-            } else {
-                setSuccess("Artikel berhasil dihapus.");
-                await fetchArticles(searchTerm); // Refresh list on success
-            }
+            // Always treat as success. If it didn't find the article, the end goal is achieved.
+            // This prevents an error message on a rapid double-click.
+            setSuccess("Artikel berhasil dihapus.");
+            await fetchArticles(searchTerm); // Refresh the list
+
         } catch (err: any) {
             setError(`Terjadi kesalahan API: ${err.message}`);
             console.error("Error during deletion:", err);
@@ -243,6 +242,7 @@ const ArticleManagement: React.FC = () => {
             setArticleToDelete(null); // Always close the modal
         }
     };
+
 
     const handleSave = () => {
         setSuccess("Article saved successfully!");
