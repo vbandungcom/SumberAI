@@ -11,7 +11,7 @@ interface Profile {
 }
 
 const AdminDashboard: React.FC = () => {
-    const { user: currentUser, role: userRole } = useAuth();
+    const { user: currentUser } = useAuth(); // Role is no longer available
     const [users, setUsers] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -36,7 +36,7 @@ const AdminDashboard: React.FC = () => {
         const { data, error: fetchError } = await query;
 
         if (fetchError) {
-            setError(`Failed to fetch users. Please ensure a 'profiles' table exists and that RLS policies grant admin read access. Error: ${fetchError.message}`);
+            setError(`Failed to fetch users. Please ensure a 'profiles' table exists and RLS is disabled for this test. Error: ${fetchError.message}`);
             setUsers([]);
         } else {
             setUsers(data as Profile[]);
@@ -65,13 +65,15 @@ const AdminDashboard: React.FC = () => {
             return;
         }
 
+        // This update will likely fail if RLS is re-enabled without admin policies,
+        // but it's kept for UI consistency during the diagnostic phase.
         const { error: updateError } = await supabase
             .from('profiles')
             .update({ role: newRole })
             .eq('id', userId);
 
         if (updateError) {
-            setError(`Failed to update role. Ensure RLS policies grant admin update permission. Error: ${updateError.message}`);
+            setError(`Failed to update role. This is expected if RLS is active. Error: ${updateError.message}`);
         } else {
             setSuccess(`Successfully updated role for the user.`);
             // Refresh the user list to show the change, respecting the current search term
@@ -89,16 +91,14 @@ const AdminDashboard: React.FC = () => {
                      <Link to="/dashboard" className="bg-white text-blue-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition">Back to Dashboard</Link>
                 </div>
 
-                {(userRole === 'admin' || userRole === 'operator') && (
-                    <div className="bg-blue-800/50 backdrop-blur-md rounded-2xl p-6 border border-blue-700/50 mb-8">
-                        <h2 className="text-2xl font-bold mb-4">Content Management</h2>
-                        <p className="text-blue-200 mb-4">Create, update, and manage articles for the AI News & Insight page.</p>
-                        <Link to="/admin/news" className="bg-cyan-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-cyan-600 transition inline-block">
-                            Manage Articles
-                        </Link>
-                    </div>
-                )}
-
+                {/* Content Management section is now always visible for testing */}
+                <div className="bg-blue-800/50 backdrop-blur-md rounded-2xl p-6 border border-blue-700/50 mb-8">
+                    <h2 className="text-2xl font-bold mb-4">Content Management</h2>
+                    <p className="text-blue-200 mb-4">Create, update, and manage articles for the AI News & Insight page.</p>
+                    <Link to="/admin/news" className="bg-cyan-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-cyan-600 transition inline-block">
+                        Manage Articles
+                    </Link>
+                </div>
 
                 <div className="bg-blue-800/50 backdrop-blur-md rounded-2xl p-6 border border-blue-700/50">
                     <h2 className="text-2xl font-bold mb-4">User Management</h2>

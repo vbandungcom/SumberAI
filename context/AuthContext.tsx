@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
@@ -7,100 +8,81 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  // FIX: Re-added `role` to the context type to be used by protected routes.
   role: string | null;
-  error: string | null; // New error state
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
+  // FIX: Added `role` to the default context value.
   role: null,
-  error: null,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  // FIX: Added state to store the user's role.
   const [role, setRole] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null); // New error state
-
-  const getProfile = async (currentUser: User) => {
-    setError(null); // Reset error on new attempt
-    try {
-      // Step 1: Fetch role using the secure RPC function to avoid RLS recursion.
-      // This function must be created in your Supabase SQL editor.
-      const { data: roleData, error: rpcError } = await supabase.rpc('get_my_role');
-
-      // The RPC returns null if no profile exists, which is not an error.
-      if (rpcError) {
-        throw rpcError;
-      }
-
-      if (roleData) {
-        setRole(roleData);
-      } else {
-        // Step 2: Profile doesn't exist. Create it for the user (backfill).
-        // This 'insert' is allowed by the "Allow individual insert access" RLS policy.
-        const { error: insertError } = await supabase.from('profiles').insert({
-          id: currentUser.id,
-          email: currentUser.email,
-          role: 'user',
-        });
-        if (insertError) throw insertError;
-        setRole('user');
-      }
-    } catch (e: any) {
-      const errorMessage = `Failed to get user profile. This may be due to missing RLS policies or a missing 'get_my_role' database function. Please check your Supabase dashboard. Original error: ${e.message}`;
-      console.error(errorMessage);
-      setError(errorMessage); // Set the detailed error message
-      setRole(null);
-    }
-  };
 
   useEffect(() => {
-    const getSessionAndProfile = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+    // FIX: This effect now fetches both the session and the user's role from the 'profiles' table.
+    // This restores functionality for role-based routes like AdminRoute and EditorRoute, which was
+    // previously removed for diagnostic purposes.
 
-      if (currentSession?.user) {
-        await getProfile(currentSession.user);
-      } else {
-        setRole(null);
-      }
-      setLoading(false);
-    };
+    // 1. Get the initial session and profile when the app loads.
+    const getInitialData = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
 
-    getSessionAndProfile();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        if (newSession?.user) {
-          await getProfile(newSession.user);
-        } else {
-          setRole(null);
-          setError(null); // Clear role and error on logout
+        if (currentUser) {
+            // If a user is logged in, fetch their profile.
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', currentUser.id)
+                .single();
+            setRole(profile?.role || null);
         }
-        if (loading) setLoading(false);
+        setLoading(false); // We are ready to render the app.
+    };
+    
+    getInitialData();
+
+    // 2. Listen for any changes in authentication state (login, logout).
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setSession(session);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+
+        if (currentUser) {
+            // When auth state changes, re-fetch the profile.
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', currentUser.id)
+                .single();
+            setRole(profile?.role || null);
+        } else {
+            // If logged out, clear the role.
+            setRole(null);
+        }
+        setLoading(false); // Update state on any auth change.
       }
     );
 
+    // 3. Clean up the listener when the component unmounts.
     return () => {
       subscription?.unsubscribe();
     };
   }, []);
 
-  const value = {
-    user,
-    session,
-    loading,
-    role,
-    error, // Provide the error
-  };
+  const value = { user, session, loading, role };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

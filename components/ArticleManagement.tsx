@@ -2,6 +2,7 @@ import React, { useState, useEffect, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { Article } from './NewsPage';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const initialArticleState: Omit<Article, 'id'> = {
     title: '',
@@ -29,16 +30,14 @@ const ArticleFormModal: React.FC<{
 
     const isEditing = article && 'id' in article;
 
-    // Fix: To resolve the TypeScript error on 'e.target.checked', we must narrow down the type of e.target.
-    // The `instanceof HTMLInputElement` check acts as a type guard, assuring TypeScript
-    // that within this block, e.target is an HTMLInputElement and has the 'checked' property.
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
+        const target = e.target;
+        const name = target.name;
         
-        if (e.target instanceof HTMLInputElement && e.target.type === 'checkbox') {
-            setFormData(prev => ({ ...prev, [name]: e.target.checked }));
+        if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+            setFormData(prev => ({ ...prev, [name]: target.checked }));
         } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
+            setFormData(prev => ({ ...prev, [name]: target.value }));
         }
     };
     
@@ -52,22 +51,27 @@ const ArticleFormModal: React.FC<{
         setLoading(true);
         setError(null);
         
-        const finalData = { ...formData, tags: formData.tags.filter(t => t) };
+        try {
+            const tagsToSave = Array.isArray(formData.tags) ? formData.tags.filter(t => t) : [];
+            const dataToSubmit = { ...formData, tags: tagsToSave };
 
-        let result;
-        if (isEditing) {
-            result = await supabase.from('articles').update(finalData).eq('id', (formData as Article).id);
-        } else {
-            result = await supabase.from('articles').insert(finalData);
-        }
+            const { error: submissionError } = isEditing
+                ? await supabase.from('articles').update(dataToSubmit).eq('id', (formData as Article).id)
+                : await supabase.from('articles').insert(dataToSubmit);
 
-        if (result.error) {
-            setError(result.error.message);
-        } else {
+            if (submissionError) {
+                throw submissionError;
+            }
+            
             onSave();
             onClose();
+
+        } catch (err: any) {
+            setError(err.message || 'An unexpected error occurred. Please check the console.');
+            console.error("Save article failed:", err);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
     
     return (
@@ -88,30 +92,30 @@ const ArticleFormModal: React.FC<{
                             </div>
                             <div>
                                 <label htmlFor="description" className="block text-sm font-medium text-blue-200">Description</label>
-                                <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={3} className="input-style" />
+                                <textarea id="description" name="description" value={formData.description || ''} onChange={handleChange} rows={3} className="input-style" />
                             </div>
                              <div>
                                 <label htmlFor="content" className="block text-sm font-medium text-blue-200">Content (HTML)</label>
-                                <textarea id="content" name="content" value={formData.content} onChange={handleChange} rows={10} className="input-style" />
+                                <textarea id="content" name="content" value={formData.content || ''} onChange={handleChange} rows={10} className="input-style" />
                             </div>
                         </div>
                         {/* Column 2 */}
                         <div className="space-y-4">
                             <div>
                                 <label htmlFor="author" className="block text-sm font-medium text-blue-200">Author</label>
-                                <input id="author" name="author" type="text" value={formData.author} onChange={handleChange} required className="input-style" />
+                                <input id="author" name="author" type="text" value={formData.author || ''} onChange={handleChange} required className="input-style" />
                             </div>
                             <div>
                                 <label htmlFor="date" className="block text-sm font-medium text-blue-200">Date</label>
-                                <input id="date" name="date" type="date" value={formData.date} onChange={handleChange} required className="input-style" />
+                                <input id="date" name="date" type="date" value={formData.date || ''} onChange={handleChange} required className="input-style" />
                             </div>
                              <div>
                                 <label htmlFor="read_time" className="block text-sm font-medium text-blue-200">Read Time (e.g., 5 menit)</label>
-                                <input id="read_time" name="read_time" type="text" value={formData.read_time} onChange={handleChange} className="input-style" />
+                                <input id="read_time" name="read_time" type="text" value={formData.read_time || ''} onChange={handleChange} className="input-style" />
                             </div>
                             <div>
                                 <label htmlFor="image_url" className="block text-sm font-medium text-blue-200">Image URL</label>
-                                <input id="image_url" name="image_url" type="url" value={formData.image_url} onChange={handleChange} className="input-style" />
+                                <input id="image_url" name="image_url" type="url" value={formData.image_url || ''} onChange={handleChange} className="input-style" />
                             </div>
                              <div>
                                 <label htmlFor="tags" className="block text-sm font-medium text-blue-200">Tags (comma-separated)</label>
@@ -149,9 +153,12 @@ const ArticleManagement: React.FC = () => {
     const [articles, setArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [editingArticle, setEditingArticle] = useState<Article | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
 
     const fetchArticles = async (searchText: string = '') => {
         setLoading(true);
@@ -178,7 +185,7 @@ const ArticleManagement: React.FC = () => {
     useEffect(() => {
         const debounceTimer = setTimeout(() => {
             fetchArticles(searchTerm);
-        }, 300); // 300ms delay
+        }, 300);
 
         return () => clearTimeout(debounceTimer);
     }, [searchTerm]);
@@ -193,20 +200,56 @@ const ArticleManagement: React.FC = () => {
         setShowModal(true);
     };
 
-    const handleDelete = async (articleId: number) => {
-        if (window.confirm("Are you sure you want to delete this article? This action cannot be undone.")) {
-            const { error: deleteError } = await supabase.from('articles').delete().eq('id', articleId);
-            if (deleteError) {
-                setError(deleteError.message);
-            } else {
-                fetchArticles(searchTerm); // Refresh list respecting current search
+    const handleInitiateDelete = (article: Article) => {
+        setError(null);
+        setSuccess(null);
+        setArticleToDelete(article);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!articleToDelete) return;
+
+        setError(null);
+        setSuccess(null);
+        setIsDeleting(true);
+
+        try {
+            const idToDelete = Number(articleToDelete.id);
+
+            if (isNaN(idToDelete)) {
+                throw new Error(`Invalid article ID: "${articleToDelete.id}".`);
             }
+
+            const { error: deleteError, count } = await supabase
+                .from('articles')
+                .delete()
+                .eq('id', idToDelete);
+
+            if (deleteError) {
+                throw deleteError;
+            }
+
+            if (count === 0 || count === null) {
+                 setError("Penghapusan gagal: Artikel tidak ditemukan. Mungkin sudah dihapus sebelumnya.");
+            } else {
+                setSuccess("Artikel berhasil dihapus.");
+                await fetchArticles(searchTerm); // Refresh list on success
+            }
+        } catch (err: any) {
+            setError(`Terjadi kesalahan API: ${err.message}`);
+            console.error("Error during deletion:", err);
+        } finally {
+            setIsDeleting(false);
+            setArticleToDelete(null); // Always close the modal
         }
     };
 
     const handleSave = () => {
+        setSuccess("Article saved successfully!");
         fetchArticles(searchTerm);
     };
+    
+    const isActionInProgress = isDeleting || showModal || articleToDelete !== null;
 
     return (
         <div className="min-h-screen bg-[#102A89] text-white p-4 md:p-8">
@@ -218,14 +261,17 @@ const ArticleManagement: React.FC = () => {
                         <p className="text-blue-200">Create, edit, and delete news articles.</p>
                     </div>
                      <div className="flex items-center gap-4">
-                        <button onClick={handleAdd} className="bg-cyan-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-cyan-600 transition">
+                        <button 
+                            onClick={handleAdd} 
+                            disabled={isActionInProgress}
+                            className="bg-cyan-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-cyan-600 transition disabled:bg-cyan-300/50 disabled:cursor-not-allowed"
+                        >
                             + Add New Article
                         </button>
                         <Link to="/admin" className="bg-white text-blue-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition">Back to Admin</Link>
                     </div>
                 </div>
 
-                 {/* Search Input */}
                  <div className="mb-6 relative">
                     <label htmlFor="article-search" className="sr-only">Search articles</label>
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -243,7 +289,8 @@ const ArticleManagement: React.FC = () => {
                     />
                 </div>
 
-                {error && <p className="bg-red-900/50 text-white p-3 rounded-md mb-4">{error}</p>}
+                {success && <p className="bg-green-900/50 text-white p-3 rounded-md mb-4">{success}</p>}
+                {error && <p className="bg-red-900/50 text-white p-3 rounded-md mb-4 whitespace-pre-wrap">{error}</p>}
 
                 <div className="bg-white rounded-lg shadow overflow-hidden">
                     <div className="overflow-x-auto">
@@ -266,8 +313,20 @@ const ArticleManagement: React.FC = () => {
                                             <td className="p-4 text-gray-600">{article.author}</td>
                                             <td className="p-4 text-gray-600">{article.date}</td>
                                             <td className="p-4 text-right space-x-2">
-                                                <button onClick={() => handleEdit(article)} className="bg-blue-600 text-white font-semibold py-1 px-3 rounded-lg hover:bg-blue-700 transition">Edit</button>
-                                                <button onClick={() => handleDelete(article.id)} className="bg-red-600 text-white font-semibold py-1 px-3 rounded-lg hover:bg-red-700 transition">Delete</button>
+                                                <button 
+                                                    onClick={() => handleEdit(article)} 
+                                                    disabled={isActionInProgress}
+                                                    className="bg-blue-600 text-white font-semibold py-1 px-3 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400/50 disabled:cursor-not-allowed"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleInitiateDelete(article)} 
+                                                    disabled={isActionInProgress}
+                                                    className="bg-red-600 text-white font-semibold py-1 px-3 rounded-lg hover:bg-red-700 transition disabled:bg-red-400/50 disabled:cursor-not-allowed"
+                                                >
+                                                    Delete
+                                                </button>
                                             </td>
                                         </tr>
                                     ))
@@ -286,6 +345,15 @@ const ArticleManagement: React.FC = () => {
                     article={editingArticle}
                     onClose={() => setShowModal(false)}
                     onSave={handleSave}
+                />
+            )}
+            
+            {articleToDelete && (
+                <DeleteConfirmationModal
+                    articleTitle={articleToDelete.title}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={() => setArticleToDelete(null)}
+                    isDeleting={isDeleting}
                 />
             )}
         </div>

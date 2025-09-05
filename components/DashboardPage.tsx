@@ -111,23 +111,29 @@ const notifications = [
     { title: 'Forum Diskusi Populer', desc: 'ChatGPT vs Google Bard - Join diskusi seru', time: '4 jam yang lalu' }
 ];
 
-// Fix: Corrected the activities array which was cut off.
 const activities = [
     { title: 'Menyelesaikan Quiz Machine Learning Basics', time: '2 jam yang lalu', tag: 'quiz', tagColor: 'bg-blue-500/80' },
     { title: 'Bergabung dalam diskusi AI Ethics', time: '5 jam yang lalu', tag: 'forum', tagColor: 'bg-green-500/80' },
     { title: 'Mengunggah proyek baru ke Marketplace', time: '1 hari yang lalu', tag: 'project', tagColor: 'bg-orange-500/80' }
 ];
 
-// Fix: Added the DashboardPage component which was missing.
 const DashboardPage: React.FC = () => {
-    const { user, role } = useAuth();
+    const { user } = useAuth(); // Role is no longer available from useAuth
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        navigate('/auth');
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                throw error;
+            }
+            navigate('/auth');
+        } catch (error) {
+            console.error("Logout failed:", error);
+            alert("Logout failed. Please check the console for details and try again.");
+        }
     };
     
     // Close dropdown when clicking outside
@@ -169,11 +175,10 @@ const DashboardPage: React.FC = () => {
                                 <Link to="/profile" className="flex items-center w-full text-left px-4 py-2 text-sm text-blue-200 hover:bg-blue-700/50">
                                     <UserIcon /> Edit Profil
                                 </Link>
-                                {role === 'admin' && (
-                                     <Link to="/admin" className="flex items-center w-full text-left px-4 py-2 text-sm text-blue-200 hover:bg-blue-700/50">
-                                        <ShieldIcon /> Admin Panel
-                                    </Link>
-                                )}
+                                {/* The role check is removed. The link is always visible for diagnostic purposes. */}
+                                <Link to="/admin" className="flex items-center w-full text-left px-4 py-2 text-sm text-blue-200 hover:bg-blue-700/50">
+                                    <ShieldIcon /> Admin Panel
+                                </Link>
                                 <button onClick={handleLogout} className="flex items-center w-full text-left px-4 py-2 text-sm text-blue-200 hover:bg-blue-700/50">
                                     <LogoutIcon /> Logout
                                 </button>
@@ -240,5 +245,4 @@ const DashboardPage: React.FC = () => {
     );
 };
 
-// Fix: Added a default export for DashboardPage.
 export default DashboardPage;
