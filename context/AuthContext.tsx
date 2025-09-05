@@ -8,6 +8,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   role: string | null;
+  error: string | null; // New error state
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   role: null,
+  error: null,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -22,49 +24,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // New error state
 
-  // This function will check and update the user's role if it's not set.
-  const updateUserRoleIfNeeded = async (currentUser: User): Promise<User> => {
-    if (!currentUser.user_metadata?.role) {
-      const { data, error } = await supabase.auth.updateUser({
-        data: { role: 'user' },
-      });
-      if (error) {
-        console.error('Error updating user role:', error.message);
-        return currentUser; // Return original user on error
+  const getProfile = async (currentUser: User) => {
+    setError(null); // Reset error on new attempt
+    try {
+      // Step 1: Fetch role using the secure RPC function to avoid RLS recursion.
+      // This function must be created in your Supabase SQL editor.
+      const { data: roleData, error: rpcError } = await supabase.rpc('get_my_role');
+
+      // The RPC returns null if no profile exists, which is not an error.
+      if (rpcError) {
+        throw rpcError;
       }
-      // Return the updated user from the API response
-      return data.user;
+
+      if (roleData) {
+        setRole(roleData);
+      } else {
+        // Step 2: Profile doesn't exist. Create it for the user (backfill).
+        // This 'insert' is allowed by the "Allow individual insert access" RLS policy.
+        const { error: insertError } = await supabase.from('profiles').insert({
+          id: currentUser.id,
+          email: currentUser.email,
+          role: 'user',
+        });
+        if (insertError) throw insertError;
+        setRole('user');
+      }
+    } catch (e: any) {
+      const errorMessage = `Failed to get user profile. This may be due to missing RLS policies or a missing 'get_my_role' database function. Please check your Supabase dashboard. Original error: ${e.message}`;
+      console.error(errorMessage);
+      setError(errorMessage); // Set the detailed error message
+      setRole(null);
     }
-    return currentUser; // Return original user if role already exists
   };
 
   useEffect(() => {
-    const getSessionAndUser = async () => {
+    const getSessionAndProfile = async () => {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
-      
-      let finalUser = currentSession?.user ?? null;
-      if (finalUser) {
-        finalUser = await updateUserRoleIfNeeded(finalUser);
-      }
-      
       setSession(currentSession);
-      setUser(finalUser);
-      setRole(finalUser?.user_metadata?.role ?? null);
+      setUser(currentSession?.user ?? null);
+
+      if (currentSession?.user) {
+        await getProfile(currentSession.user);
+      } else {
+        setRole(null);
+      }
       setLoading(false);
     };
 
-    getSessionAndUser();
+    getSessionAndProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
-        let finalUser = newSession?.user ?? null;
-        if (finalUser) {
-            finalUser = await updateUserRoleIfNeeded(finalUser);
-        }
         setSession(newSession);
-        setUser(finalUser);
-        setRole(finalUser?.user_metadata?.role ?? null);
+        setUser(newSession?.user ?? null);
+        if (newSession?.user) {
+          await getProfile(newSession.user);
+        } else {
+          setRole(null);
+          setError(null); // Clear role and error on logout
+        }
+        if (loading) setLoading(false);
       }
     );
 
@@ -78,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     loading,
     role,
+    error, // Provide the error
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

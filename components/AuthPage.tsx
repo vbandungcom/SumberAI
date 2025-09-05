@@ -26,14 +26,11 @@ const AuthPage: React.FC = () => {
         navigate('/dashboard');
       }
     } else {
+      // The role is no longer set here. It's now handled by a database trigger
+      // that creates a new profile in the 'profiles' table with a default role.
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            role: 'user',
-          },
-        },
       });
       if (error) {
         setError(error.message);

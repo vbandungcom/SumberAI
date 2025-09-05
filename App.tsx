@@ -5,6 +5,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LandingPage from './components/LandingPage';
 import AuthPage from './components/AuthPage';
 import DashboardPage from './components/DashboardPage';
+import AdminDashboard from './components/AdminDashboard';
+import AdminRoute from './components/AdminRoute';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -33,6 +35,14 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
             }
           />
         </Routes>
