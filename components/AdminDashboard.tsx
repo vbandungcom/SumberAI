@@ -11,7 +11,7 @@ interface Profile {
 }
 
 const AdminDashboard: React.FC = () => {
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, role: userRole } = useAuth();
     const [users, setUsers] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -88,6 +88,17 @@ const AdminDashboard: React.FC = () => {
                      <h1 className="text-4xl font-bold">Admin Dashboard</h1>
                      <Link to="/dashboard" className="bg-white text-blue-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition">Back to Dashboard</Link>
                 </div>
+
+                {(userRole === 'admin' || userRole === 'operator') && (
+                    <div className="bg-blue-800/50 backdrop-blur-md rounded-2xl p-6 border border-blue-700/50 mb-8">
+                        <h2 className="text-2xl font-bold mb-4">Content Management</h2>
+                        <p className="text-blue-200 mb-4">Create, update, and manage articles for the AI News & Insight page.</p>
+                        <Link to="/admin/news" className="bg-cyan-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-cyan-600 transition inline-block">
+                            Manage Articles
+                        </Link>
+                    </div>
+                )}
+
 
                 <div className="bg-blue-800/50 backdrop-blur-md rounded-2xl p-6 border border-blue-700/50">
                     <h2 className="text-2xl font-bold mb-4">User Management</h2>

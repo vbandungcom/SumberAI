@@ -31,9 +31,24 @@ For security, it's crucial to enable Row Level Security on the new table.
 ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
 ```
 
-## 3. Create RLS Policies
+## 3. Create Helper Function for Role Checking
+The application's authorization logic relies on a helper function in the database to get the current user's role from the `profiles` table. This is more secure than relying on JWT claims, which can become stale. The RLS policies below will use this function. The rest of the app also depends on this function.
 
-These policies will control who can access the data. We will make the articles readable by everyone, but only allow users with an `admin` role to create, update, or delete them.
+Run this in the **SQL Editor**:
+```sql
+-- Note: This function is used by both the app client and the RLS policies.
+-- It securely returns the role of the currently logged-in user.
+CREATE OR REPLACE FUNCTION public.get_my_role()
+RETURNS TEXT
+LANGUAGE sql STABLE
+AS $$
+  SELECT role FROM public.profiles WHERE id = auth.uid()
+$$;
+```
+
+## 4. Create RLS Policies
+
+These policies will control who can access the data. We will make the articles readable by everyone, but only allow users with an `admin` or `operator` role to create, update, or delete them. These policies use the `get_my_role()` function created above.
 
 Run these queries in the **SQL Editor**:
 
@@ -44,26 +59,28 @@ ON public.articles
 FOR SELECT
 USING (TRUE);
 
--- Policy 2: Allow admins to insert new articles
-CREATE POLICY "Allow insert for admins"
+-- Policy 2: Allow admins and operators to insert new articles
+-- This policy fixes the "new row violates row-level security policy" error.
+-- It now correctly checks the user's role from the 'profiles' table.
+CREATE POLICY "Allow insert for admins and operators"
 ON public.articles
 FOR INSERT
-WITH CHECK (auth.jwt() ->> 'role' = 'admin');
+WITH CHECK ((SELECT get_my_role()) IN ('admin', 'operator'));
 
--- Policy 3: Allow admins to update articles
-CREATE POLICY "Allow update for admins"
+-- Policy 3: Allow admins and operators to update articles
+CREATE POLICY "Allow update for admins and operators"
 ON public.articles
 FOR UPDATE
-USING (auth.jwt() ->> 'role' = 'admin');
+USING ((SELECT get_my_role()) IN ('admin', 'operator'));
 
--- Policy 4: Allow admins to delete articles
-CREATE POLICY "Allow delete for admins"
+-- Policy 4: Allow admins and operators to delete articles
+CREATE POLICY "Allow delete for admins and operators"
 ON public.articles
 FOR DELETE
-USING (auth.jwt() ->> 'role' = 'admin');
+USING ((SELECT get_my_role()) IN ('admin', 'operator'));
 ```
 
-## 4. Insert Sample Data
+## 5. Insert Sample Data
 
 To populate your news feed, run the following `INSERT` statement in the **SQL Editor**. This will add the initial set of articles to your new table.
 

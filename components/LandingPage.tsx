@@ -31,7 +31,7 @@ const featureData = [
         title: 'AI Academy',
         description: 'Akses modul pembelajaran AI interaktif, video tutorial, quiz, dan chatbot pembelajaran personal',
         links: ['Video', 'Quiz'],
-        path: '#'
+        path: '/ai-academy'
     },
     {
         icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>,
@@ -39,7 +39,7 @@ const featureData = [
         title: 'AI Marketplace',
         description: 'Jual beli produk digital berbasis AI seperti prompt engineering, template, dan toolkit AI',
         links: ['Beli', 'Jual'],
-        path: '#'
+        path: '/marketplace'
     },
     {
         icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>,
@@ -47,7 +47,7 @@ const featureData = [
         title: 'AI English Tutor',
         description: 'Chatbot pintar untuk latihan TOEFL/IELTS dengan feedback real-time dan analisis kemampuan',
         links: ['Speaking', 'Writing'],
-        path: '#'
+        path: '/english-tutor'
     },
     {
         icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
@@ -55,7 +55,7 @@ const featureData = [
         title: 'AI Scholar Hub',
         description: 'Pencarian beasiswa cerdas dengan notifikasi otomatis berdasarkan profil dan preferensi Anda',
         links: ['Filter', 'Alert'],
-        path: '#'
+        path: '/scholar-hub'
     },
     {
         icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.125-1.273-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.125-1.273.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
@@ -63,7 +63,7 @@ const featureData = [
         title: 'Community Forum',
         description: 'Forum diskusi mahasiswa untuk berbagi pengalaman, tips, dan insight tentang AI dan teknologi',
         links: ['Diskusi', 'Berbagi'],
-        path: '#'
+        path: '/forum'
     }
 ];
 
@@ -273,10 +273,11 @@ const LandingPage: React.FC = () => {
                             <ul className="space-y-2">
                                 <li><Link to="/dashboard" className="hover:text-white">Dashboard</Link></li>
                                 <li><Link to="/news" className="hover:text-white">AI News & Insight</Link></li>
-                                <li><a href="#" className="hover:text-white">AI Academy</a></li>
-                                <li><a href="#" className="hover:text-white">Marketplace</a></li>
-                                <li><a href="#" className="hover:text-white">English Tutor</a></li>
-                                <li><a href="#" className="hover:text-white">Scholar Hub</a></li>
+                                <li><Link to="/ai-academy" className="hover:text-white">AI Academy</Link></li>
+                                <li><Link to="/marketplace" className="hover:text-white">Marketplace</Link></li>
+                                <li><Link to="/english-tutor" className="hover:text-white">English Tutor</Link></li>
+                                <li><Link to="/scholar-hub" className="hover:text-white">Scholar Hub</Link></li>
+                                <li><Link to="/forum" className="hover:text-white">Community Forum</Link></li>
                             </ul>
                         </div>
                          <div>
